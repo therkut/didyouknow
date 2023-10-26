@@ -1,0 +1,42 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Tweet Schedule
+
+on:
+  schedule:
+    - cron: '0 13 * * *' # The workflow runs every day at 03:00 am UTC time.
+
+jobs:
+  tweet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11.5'
+      - name: Cache pip and downloaded packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.local/lib/python3.11.5/site-packages # Adjust the Python version here
+          key: ${{ runner.os }}-pip-${{ hashFiles('main.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests requests_oauthlib beautifulsoup4
+
+      - name: Run Python Script
+        run: python main.py
+        env:
+          CONSUMER_KEY: ${{ secrets.TWITTER_CONSUMER_KEY }}
+          CONSUMER_SECRET: ${{ secrets.TWITTER_CONSUMER_SECRET }}
+          ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
