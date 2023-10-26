@@ -1,69 +1,50 @@
-import requests
+import os
 import time
-from requests_oauthlib import OAuth1Session
+import requests
 from bs4 import BeautifulSoup
 from html import unescape
+from requests_oauthlib import OAuth1Session
 
+# Constants
+WIKI_URL = 'https://tr.wikipedia.org/wiki/Anasayfa'
+TWEET_URL = 'https://api.twitter.com/2/tweets'
+TWEET_INTERVAL = 30  # 30-second interval
+TD_TAG_ID = 'mp-bm'  # ID for the desired 'td' tag
+
+# OAuth configuration
 consumer_key = os.getenv('CONSUMER_KEY')
 consumer_secret = os.getenv('CONSUMER_SECRET')
 access_token = os.getenv('ACCESS_TOKEN')
 access_token_secret = os.getenv('ACCESS_TOKEN_SECRET')
 
-def strip_tags(html):
-    return unescape(BeautifulSoup(html, 'html.parser').text)
+oauth = OAuth1Session(consumer_key, client_secret=consumer_secret,
+                      resource_owner_key=access_token, resource_owner_secret=access_token_secret)
 
-def tweetBot():
+def fetch_and_format_tweets():
     try:
-        wiki = requests.get('https://tr.wikipedia.org/wiki/Anasayfa')
+        wiki = requests.get(WIKI_URL)
         wiki_page = wiki.text
         soup = BeautifulSoup(wiki_page, 'html.parser')
-
-        # Find the content of the 'td' tag
-        td_tag = soup.find('td', {'id': 'mp-bm'})
-
-        # Find the 'ul' tag inside the 'td' tag
+        td_tag = soup.find('td', {'id': TD_TAG_ID})
         ul_tag = td_tag.find('ul')
-
-        # Find all 'li' tags within the 'ul' tag
-        li_tags = ul_tag.find_all('li')
-
-        # Reverse the list elements
-        li_tags.reverse()
-
-        tweet_list = []
-
-        for counter, li in enumerate(li_tags):
-            if counter == 5:
-                break
-            tweet = strip_tags(li.get_text())
-            tweet_list.append(tweet)
-
+        li_tags = ul_tag.find_all('li')[:5]  # Only first 5 items
+        tweet_list = [unescape(BeautifulSoup(li.get_text(), 'html.parser').text) for li in li_tags]
         return tweet_list
-
-    except Exception as e:
-        print("An error occurred while fetching data from Wikipedia:", e)
+    except requests.RequestException as e:
+        print(f"An error occurred while fetching data from Wikipedia: {e}")
         return []
 
-oauth = OAuth1Session(
-    consumer_key,
-    client_secret=consumer_secret,
-    resource_owner_key=access_token,
-    resource_owner_secret=access_token_secret,
-)
+def post_tweets(tweets):
+    for tweet in tweets:
+        payload = {"text": f"{tweet}\n\n #Bugün #Tarih #Spor #Sanat"}
+        print("Payload: %s" % payload)
+        response = oauth.post(TWEET_URL, json=payload)
+        if response.status_code != 200:
+            print(f"Request returned an error: {response.status_code} {response.text}")
+        else:
+            print("Tweet successfully sent")
 
-tweet_list = tweetBot()
-tweet = "\n".join(tweet_list)  # Join the tweet list into a single string
-
-for tweet in tweet_list:
-    payload = {"text": f"{tweet}\n\n #Bugün #Tarih #Spor #Sanat"}
-
-    print("Payload: %s" % payload)
-
-    response = oauth.post("https://api.twitter.com/2/tweets", json=payload)
-    
-    if response.status_code != 200:
-        print("Request returned an error: {} {}".format(response.status_code, response.text))
-    else:
-        print("Tweet successfully sent")
-
-    time.sleep(30)  # 30-second interval
+if __name__ == "__main__":
+    tweet_list = fetch_and_format_tweets()
+    post_tweets(tweet_list)
+    time.sleep(TWEET_INTERVAL)
