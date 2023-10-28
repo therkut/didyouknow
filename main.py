@@ -1,8 +1,8 @@
 import os
 import time
 import requests
-from bs4 import BeautifulSoup
 from html import unescape
+from bs4 import BeautifulSoup
 from requests_oauthlib import OAuth1Session
 
 # Constants
@@ -12,15 +12,15 @@ WAIT_INTERVAL = 40  # 40-second interval
 TD_ELEMENT_ID = 'mp-bm'  # ID of the td element
 
 # Authenticate with Twitter API
-consumer_key = "L6H7isVGFUsSakFU73aeqjrTc"
-consumer_secret = "mPlGmndoJZ9Kn8ESuBAwktARByuqC4XNz7Q2xryAcLGQt7O9bK"
-access_token = "1717148000491835392-Exl11W9MQUIHJmbfIwasjcacAB78QP"
-access_token_secret = "ihVSNeocauOway7s2xV26GLYckheYi6uEyeDYOMp6L9Or"
+consumer_key = os.getenv('CONSUMER_KEY')
+consumer_secret = os.getenv('CONSUMER_SECRET')
+access_token = os.getenv('ACCESS_TOKEN')
+access_token_secret = os.getenv('ACCESS_TOKEN_SECRET')
 
 oauth = OAuth1Session(consumer_key, client_secret=consumer_secret, resource_owner_key=access_token, resource_owner_secret=access_token_secret)
 
 # HASHTAG
-HASHTAG = "#Bugün #Tarih #Güncel #Bilgi #TarihteBugün"
+HASHTAG = "#Bugün #Tarih #Spor #Sanat"
 
 # Function to strip HTML tags from text
 def strip_tags(html):
