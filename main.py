@@ -10,7 +10,7 @@ WIKIPEDIA_URL = 'https://tr.wikipedia.org/wiki/Anasayfa'
 TWITTER_API_URL = 'https://api.twitter.com/2/tweets'
 WAIT_INTERVAL = 40  # 40-second interval
 TD_ELEMENT_ID = 'mp-bm'  # ID of the td element
-HASHTAG = "#Bugün #Tarih #Spor #Sanat"
+HASHTAG = "#Bugün #Bilgi #Tarih #Spor #Sanat"
 
 # Authenticate with Twitter API
 consumer_key = os.getenv('CONSUMER_KEY')
